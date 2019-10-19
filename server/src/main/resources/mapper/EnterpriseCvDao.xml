@@ -3,14 +3,41 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.freework.cvitae.dao.EnterpriseCvDao">
-    <select id="queryByUserId" parameterType="integer">
+    <select id="queryByUserId" parameterType="integer" resultType="com.freework.cvitae.entity.EnterpriseCv">
         SELECT
-        enterprise_cv_id, enterprise_id, curriculum_vitae_id, status, create_time, last_edit_time
+        enterprise_cv_id, enterprise_id, tb_enterprise_cv.curriculum_vitae_id, status, tb_enterprise_cv.create_time, tb_enterprise_cv.last_edit_time
         FROM
         tb_enterprise_cv,
         tb_curriculum_vitae
         WHERE
         tb_enterprise_cv.curriculum_vitae_id = tb_curriculum_vitae.curriculum_vitae_id
         AND tb_curriculum_vitae.user_id=#{userId}
+    </select>
+
+    <select id="queryByRequirement" parameterType="com.freework.cvitae.entity.EnterpriseCv"
+            resultType="com.freework.cvitae.entity.EnterpriseCv">
+        SELECT
+        enterprise_cv_id,
+        enterprise_id,
+        status,
+        tb_enterprise_cv.curriculum_vitae_id,
+        tb_enterprise_cv.create_time,
+        tb_enterprise_cv.last_edit_time
+        FROM
+        tb_enterprise_cv,
+        tb_curriculum_vitae
+        <where>
+            <if test="status != null">
+                AND status=#{status}
+            </if>
+            <if test="userId != null">
+                AND tb_enterprise_cv.curriculum_vitae_id = tb_curriculum_vitae.curriculum_vitae_id
+                AND tb_curriculum_vitae.user_id=#{userId}
+            </if>
+            <if test="enterpriseId != null">
+                AND enterprise_id=#{enterpriseId}
+            </if>
+        </where>
+        ORDER BY tb_enterprise_cv.last_edit_time DESC
     </select>
 </mapper>

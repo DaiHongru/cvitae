@@ -23,6 +23,11 @@ public class EnterpriseCv {
     private Integer curriculumVitaeId;
 
     /**
+     * 求职者ID，数据库中无此字段
+     */
+    private Integer userId;
+
+    /**
      * 投递状态，-1退回，0投递中，1通过，
      */
     private Integer status;
@@ -83,5 +88,13 @@ public class EnterpriseCv {
 
     public void setLastEditTime(Date lastEditTime) {
         this.lastEditTime = lastEditTime;
+    }
+
+    public Integer getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Integer userId) {
+        this.userId = userId;
     }
 }

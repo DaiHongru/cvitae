@@ -11,6 +11,10 @@ import java.util.Map;
  */
 @FeignClient(name = "CVITAE", fallback = CvitaeClientFallback.class)
 public interface CvitaeClient {
+    String CVITAE_VO_LIST_KEY = "cvitaeVoList";
+    String ENTERPRISE_CV_VO_LIST_KEY = "enterpriseCvVoList";
+    String PASS_CVITAE_COUNT_KEY = "passCvitaeCount";
+
     /**
      * 根据用户ID获取的简历信息
      *

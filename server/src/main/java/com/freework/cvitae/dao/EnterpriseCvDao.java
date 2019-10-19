@@ -9,10 +9,10 @@ import java.util.List;
  */
 public interface EnterpriseCvDao {
     /**
-     * 根据用户ID查询简历投递情况
+     * 根据条件查询简历投递情况
      *
-     * @param userId
+     * @param enterpriseCv
      * @return
      */
-    List<EnterpriseCv> queryByUserId(Integer userId);
+    List<EnterpriseCv> queryByRequirement(EnterpriseCv enterpriseCv);
 }

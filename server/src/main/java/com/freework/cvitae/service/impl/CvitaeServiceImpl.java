@@ -9,6 +9,7 @@ import com.freework.common.loadon.result.util.ResultUtil;
 import com.freework.common.loadon.util.FileUtil;
 import com.freework.common.loadon.util.JsonUtil;
 import com.freework.common.loadon.util.PathUtil;
+import com.freework.cvitae.client.vo.CvitaeVo;
 import com.freework.cvitae.dao.CvitaeDao;
 import com.freework.cvitae.entity.Cvitae;
 import com.freework.cvitae.exceptions.CvitaeOperationException;
@@ -21,9 +22,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.IOException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.*;
+import java.net.URLEncoder;
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author daihongru
@@ -79,8 +83,80 @@ public class CvitaeServiceImpl implements CvitaeService {
         return ResultUtil.success();
     }
 
+    @Override
+    public ResultVo cvitaeDownload(Integer curriculumVitaeId, String token, HttpServletResponse response,
+                                   HttpServletRequest request) {
+        String userKey = UserRedisKey.LOGIN_KEY + token;
+        if (!jedisKeys.exists(userKey)) {
+            return ResultUtil.error(ResultStatusEnum.UNAUTHORIZED);
+        }
+        UserVo userVo = getCurrentUserVo(userKey);
+        String path = null;
+        String fileName = null;
+        List<CvitaeVo> cvitaeVoList = userVo.getCvitaeVoList();
+        for (CvitaeVo cvitaeVo : cvitaeVoList) {
+            if (cvitaeVo.getCurriculumVitaeId().equals(curriculumVitaeId)) {
+                path = cvitaeVo.getAddress();
+                fileName = cvitaeVo.getFileName();
+                break;
+            }
+        }
+        if (path == null) {
+            return ResultUtil.error(ResultStatusEnum.UNAUTHORIZED);
+        }
+        StringBuffer stringBuffer = new StringBuffer(path);
+        stringBuffer.delete(0, 15);
+        path = PathUtil.getBasePath() + stringBuffer.toString();
+        File file = new File(path);
+        if (!file.exists()) {
+            return ResultUtil.error(ResultStatusEnum.NOT_FOUND);
+        }
+        String name = null;
+        String headerKey = "User-Agent";
+        String indexOfKey = "MSIE";
+        if (request.getHeader(headerKey).toUpperCase().indexOf(indexOfKey) > 0) {
+            try {
+                name = URLEncoder.encode(fileName, "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        } else {
+            try {
+                name = new String(fileName.getBytes(), "ISO-8859-1");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+        response.setContentType("application/force-download; charset=utf-8");
+        response.addHeader("Content-disposition", "attachment;fileName=\"" + name + "\"");
+        byte[] buffer = new byte[1024];
+        FileInputStream fis = null;
+        BufferedInputStream bis = null;
+        OutputStream os = null;
+        try {
+            os = response.getOutputStream();
+            fis = new FileInputStream(file);
+            bis = new BufferedInputStream(fis);
+            int i = bis.read(buffer);
+            while (i != -1) {
+                os.write(buffer);
+                i = bis.read(buffer);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try {
+            bis.close();
+            fis.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return ResultUtil.success();
+    }
+
     /**
-     * 获取当前登录企业
+     * 获取当前登录的用户
      *
      * @param key
      * @return

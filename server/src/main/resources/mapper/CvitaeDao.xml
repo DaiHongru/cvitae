@@ -13,7 +13,7 @@
         )
     </insert>
 
-    <select id="queryByUserId" parameterType="integer">
+    <select id="queryByUserId" parameterType="integer" resultType="com.freework.cvitae.entity.Cvitae">
         SELECT
         curriculum_vitae_id, user_id, file_name, address, create_time, last_edit_time
         FROM
