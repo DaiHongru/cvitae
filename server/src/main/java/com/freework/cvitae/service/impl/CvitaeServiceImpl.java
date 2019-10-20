@@ -17,6 +17,7 @@ import com.freework.cvitae.service.CvitaeService;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -80,6 +81,12 @@ public class CvitaeServiceImpl implements CvitaeService {
             logger.error("上传简历时将文件存放到目标路径时异常：" + e);
             throw new CvitaeOperationException(e.getMessage());
         }
+        List<CvitaeVo> cvitaeVoList = userVo.getCvitaeVoList();
+        CvitaeVo cvitaeVo = new CvitaeVo();
+        BeanUtils.copyProperties(cvitae, cvitaeVo);
+        cvitaeVoList.add(0, cvitaeVo);
+        userVo.setCvitaeVoList(cvitaeVoList);
+        setCurrentUserVo(userVo, userKey);
         return ResultUtil.success();
     }
 
@@ -165,5 +172,16 @@ public class CvitaeServiceImpl implements CvitaeService {
         String userStr = jedisStrings.get(key);
         UserVo userVo = JsonUtil.jsonToObject(userStr, UserVo.class);
         return userVo;
+    }
+
+    /**
+     * 设置当前登录企业的信息
+     *
+     * @param userVo
+     * @param key
+     */
+    private void setCurrentUserVo(UserVo userVo, String key) {
+        String userStr = JsonUtil.objectToJson(userVo);
+        jedisStrings.set(key, userStr);
     }
 }
