@@ -3,22 +3,13 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.freework.cvitae.dao.EnterpriseCvDao">
-    <select id="queryByUserId" parameterType="integer" resultType="com.freework.cvitae.entity.EnterpriseCv">
-        SELECT
-        enterprise_cv_id, enterprise_id, tb_enterprise_cv.curriculum_vitae_id, status, tb_enterprise_cv.create_time, tb_enterprise_cv.last_edit_time
-        FROM
-        tb_enterprise_cv,
-        tb_curriculum_vitae
-        WHERE
-        tb_enterprise_cv.curriculum_vitae_id = tb_curriculum_vitae.curriculum_vitae_id
-        AND tb_curriculum_vitae.user_id=#{userId}
-    </select>
 
     <select id="queryByRequirement" parameterType="com.freework.cvitae.entity.EnterpriseCv"
             resultType="com.freework.cvitae.entity.EnterpriseCv">
         SELECT
         enterprise_cv_id,
         enterprise_id,
+        vocation_id,
         status,
         tb_enterprise_cv.curriculum_vitae_id,
         tb_enterprise_cv.create_time,
@@ -37,7 +28,30 @@
             <if test="enterpriseId != null">
                 AND enterprise_id=#{enterpriseId}
             </if>
+            <if test="vocationId != null">
+                AND vocation_id=#{vocationId}
+            </if>
         </where>
         ORDER BY tb_enterprise_cv.last_edit_time DESC
     </select>
+
+    <insert id="insert" useGeneratedKeys="true"
+            keyProperty="enterpriseCvId" keyColumn="enterpriseCvId">
+        INSERT INTO
+        tb_enterprise_cv(
+        enterprise_id,
+        vocation_id,
+        curriculum_vitae_id,
+        status,
+        create_time,
+        last_edit_time
+        ) VALUES (
+        #{enterpriseId},
+        #{vocationId},
+        #{curriculumVitaeId},
+        #{status},
+        #{createTime},
+        #{lastEditTime}
+        )
+    </insert>
 </mapper>

@@ -13,13 +13,26 @@
         )
     </insert>
 
-    <select id="queryByUserId" parameterType="integer" resultType="com.freework.cvitae.entity.Cvitae">
+    <select id="queryByRequirement" parameterType="com.freework.cvitae.entity.Cvitae"
+            resultType="com.freework.cvitae.entity.Cvitae">
         SELECT
-        curriculum_vitae_id, user_id, file_name, address, create_time, last_edit_time
+        curriculum_vitae_id,
+        user_id,
+        file_name,
+        address,
+        create_time,
+        last_edit_time
         FROM
         tb_curriculum_vitae
-        WHERE
-        user_id=#{userId}
+        <where>
+            <if test="userId != null">
+                AND user_id=#{userId}
+            </if>
+            <if test="curriculumVitaeId != null">
+                AND curriculum_vitae_id=#{curriculumVitaeId}
+            </if>
+        </where>
+        ORDER BY last_edit_time DESC
     </select>
 
 </mapper>

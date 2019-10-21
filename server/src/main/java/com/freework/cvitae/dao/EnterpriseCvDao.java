@@ -15,4 +15,13 @@ public interface EnterpriseCvDao {
      * @return
      */
     List<EnterpriseCv> queryByRequirement(EnterpriseCv enterpriseCv);
+
+    /**
+     * 添加一条新的纪录
+     *
+     * @param enterpriseCv
+     * @return
+     */
+    int insert(EnterpriseCv enterpriseCv);
+
 }

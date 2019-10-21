@@ -18,6 +18,11 @@ public class EnterpriseCv {
     private Integer enterpriseId;
 
     /**
+     * 岗位ID
+     */
+    private Integer vocationId;
+
+    /**
      * 投递的简历ID
      */
     private Integer curriculumVitaeId;
@@ -96,5 +101,13 @@ public class EnterpriseCv {
 
     public void setUserId(Integer userId) {
         this.userId = userId;
+    }
+
+    public Integer getVocationId() {
+        return vocationId;
+    }
+
+    public void setVocationId(Integer vocationId) {
+        this.vocationId = vocationId;
     }
 }

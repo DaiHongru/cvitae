@@ -1,6 +1,7 @@
 package com.freework.cvitae.service;
 
 import com.freework.common.loadon.result.entity.ResultVo;
+import com.freework.cvitae.entity.EnterpriseCv;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -31,4 +32,13 @@ public interface CvitaeService {
      * @return
      */
     ResultVo cvitaeDownload(Integer curriculumVitaeId, String token, HttpServletResponse response, HttpServletRequest request);
+
+    /**
+     * 简历投递
+     *
+     * @param enterpriseCv
+     * @param token
+     * @return
+     */
+    ResultVo applyByVocation(EnterpriseCv enterpriseCv, String token);
 }

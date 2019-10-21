@@ -10,9 +10,14 @@ import com.freework.common.loadon.util.FileUtil;
 import com.freework.common.loadon.util.JsonUtil;
 import com.freework.common.loadon.util.PathUtil;
 import com.freework.cvitae.client.vo.CvitaeVo;
+import com.freework.cvitae.client.vo.EnterpriseCvVo;
 import com.freework.cvitae.dao.CvitaeDao;
+import com.freework.cvitae.dao.EnterpriseCvDao;
 import com.freework.cvitae.entity.Cvitae;
+import com.freework.cvitae.entity.EnterpriseCv;
+import com.freework.cvitae.enums.EnterpriseCvStateEnum;
 import com.freework.cvitae.exceptions.CvitaeOperationException;
+import com.freework.cvitae.exceptions.EnterpriseCvOperationException;
 import com.freework.cvitae.service.CvitaeService;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -42,6 +47,8 @@ public class CvitaeServiceImpl implements CvitaeService {
     private JedisUtil.Strings jedisStrings;
     @Autowired(required = false)
     private CvitaeDao cvitaeDao;
+    @Autowired(required = false)
+    private EnterpriseCvDao enterpriseCvDao;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -68,8 +75,8 @@ public class CvitaeServiceImpl implements CvitaeService {
         try {
             int judgeNum = cvitaeDao.insert(cvitae);
             if (judgeNum <= 0) {
-                logger.error("上传简历时储存文件路径失败");
-                throw new CvitaeOperationException("上传简历时储存文件路径失败");
+                logger.error("上传简历时储存文件信息失败");
+                throw new CvitaeOperationException("上传简历时储存文件信息失败");
             }
         } catch (Exception e) {
             logger.error("上传简历时储存文件路径异常:" + e.getMessage());
@@ -159,6 +166,55 @@ public class CvitaeServiceImpl implements CvitaeService {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return ResultUtil.success();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ResultVo applyByVocation(EnterpriseCv enterpriseCv, String token) {
+        if (enterpriseCv == null || enterpriseCv.getCurriculumVitaeId() == null || enterpriseCv.getEnterpriseId() == null || enterpriseCv.getVocationId() == null) {
+            return ResultUtil.error(ResultStatusEnum.BAD_REQUEST);
+        }
+        String userKey = UserRedisKey.LOGIN_KEY + token;
+        if (!jedisKeys.exists(userKey)) {
+            return ResultUtil.error(ResultStatusEnum.UNAUTHORIZED);
+        }
+        Cvitae cvitae = new Cvitae();
+        cvitae.setCurriculumVitaeId(enterpriseCv.getCurriculumVitaeId());
+        List<Cvitae> cvitaeList = cvitaeDao.queryByRequirement(cvitae);
+        if (cvitaeList == null || cvitaeList.size() <= 0) {
+            return ResultUtil.error(ResultStatusEnum.INTERNAL_SERVER_ERROR);
+        }
+        enterpriseCv.setStatus(EnterpriseCvStateEnum.DELIVERY.getState());
+        enterpriseCv.setCreateTime(new Date());
+        enterpriseCv.setLastEditTime(new Date());
+        try {
+            int judgeNum = enterpriseCvDao.insert(enterpriseCv);
+            if (judgeNum <= 0) {
+                logger.error("投递简历时写数据库失败");
+                throw new EnterpriseCvOperationException("投递简历时写数据库失败");
+            }
+        } catch (Exception e) {
+            logger.error("投递简历时写数据库异常:" + e.getMessage());
+            throw new EnterpriseCvOperationException("投递简历时写数据库异常:" + e.getMessage());
+        }
+        String fileName = cvitaeList.get(0).getFileName();
+        String srcPath = PathUtil.getCvitaePath(enterpriseCv.getUserId()) + fileName;
+        String targetAddr = PathUtil.getEnterpriseCvitaePath(enterpriseCv.getEnterpriseId(), enterpriseCv.getUserId());
+        FileUtil.mkdirPath(targetAddr);
+        String targetPath = targetAddr + fileName;
+        try {
+            FileUtil.copyFile(srcPath, targetPath);
+        } catch (Exception e) {
+            throw new EnterpriseCvOperationException("投递简历时拷贝简历文件失败：" + e);
+        }
+        UserVo userVo = getCurrentUserVo(userKey);
+        List<EnterpriseCvVo> enterpriseCvVoList = userVo.getEnterpriseCvVoList();
+        EnterpriseCvVo enterpriseCvVo = new EnterpriseCvVo();
+        BeanUtils.copyProperties(enterpriseCv, enterpriseCvVo);
+        enterpriseCvVoList.add(0, enterpriseCvVo);
+        userVo.setEnterpriseCvVoList(enterpriseCvVoList);
+        setCurrentUserVo(userVo, userKey);
         return ResultUtil.success();
     }
 

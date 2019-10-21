@@ -17,10 +17,10 @@ public interface CvitaeDao {
     int insert(Cvitae cvitae);
 
     /**
-     * 根据用户ID查询简历
+     * 根据条件查询简历
      *
-     * @param userId
+     * @param cvitae
      * @return
      */
-    List<Cvitae> queryByUserId(Integer userId);
+    List<Cvitae> queryByRequirement(Cvitae cvitae);
 }

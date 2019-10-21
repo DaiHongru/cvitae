@@ -23,6 +23,11 @@ public class EnterpriseCvVo {
     private Integer curriculumVitaeId;
 
     /**
+     * 岗位ID
+     */
+    private Integer vocationId;
+
+    /**
      * 投递状态，-1退回，0投递中，1通过，
      */
     private Integer status;
@@ -83,5 +88,13 @@ public class EnterpriseCvVo {
 
     public void setLastEditTime(Date lastEditTime) {
         this.lastEditTime = lastEditTime;
+    }
+
+    public Integer getVocationId() {
+        return vocationId;
+    }
+
+    public void setVocationId(Integer vocationId) {
+        this.vocationId = vocationId;
     }
 }

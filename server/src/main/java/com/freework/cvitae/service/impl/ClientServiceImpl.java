@@ -35,7 +35,9 @@ public class ClientServiceImpl implements ClientService {
         Map<String, Object> map = new HashMap<>(16);
         List<CvitaeVo> cvitaeVoList = new ArrayList<>();
         List<EnterpriseCvVo> enterpriseCvVoList = new ArrayList<>();
-        List<Cvitae> cvitaeList = cvitaeDao.queryByUserId(userId);
+        Cvitae cvitae = new Cvitae();
+        cvitae.setUserId(userId);
+        List<Cvitae> cvitaeList = cvitaeDao.queryByRequirement(cvitae);
         if (cvitaeList != null && cvitaeList.size() > 0) {
             cvitaeVoList = cvitaeList.stream().map(e -> {
                 CvitaeVo outPut = new CvitaeVo();
