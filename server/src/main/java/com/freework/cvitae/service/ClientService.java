@@ -15,5 +15,5 @@ public interface ClientService {
      * @param userId
      * @return
      */
-    Map<String, Object> getUserCvitaeInfo(Integer userId);
+    Map<String, Integer> getUserCvitaeInfo(Integer userId);
 }

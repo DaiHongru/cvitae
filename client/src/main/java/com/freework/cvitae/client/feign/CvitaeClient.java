@@ -11,8 +11,8 @@ import java.util.Map;
  */
 @FeignClient(name = "CVITAE", fallback = CvitaeClientFallback.class)
 public interface CvitaeClient {
-    String CVITAE_VO_LIST_KEY = "cvitaeVoList";
-    String ENTERPRISE_CV_VO_LIST_KEY = "enterpriseCvVoList";
+    String CVITAE_COUNT_KEY = "cvitaeCount";
+    String ENTERPRISE_CV_COUNT_KEY = "enterpriseCvCount";
     String PASS_CVITAE_COUNT_KEY = "passCvitaeCount";
 
     /**
@@ -22,6 +22,6 @@ public interface CvitaeClient {
      * @return
      */
     @PostMapping("client/getUserCvitaeInfo")
-    Map<String, Object> getUserCvitaeInfo(@RequestBody Integer userId);
+    Map<String, Integer> getUserCvitaeInfo(@RequestBody Integer userId);
 
 }

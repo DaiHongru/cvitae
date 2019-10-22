@@ -30,6 +30,8 @@
         <common-loadon.version>0.0.1-SNAPSHOT</common-loadon.version>
         <user-client.version>0.0.1-SNAPSHOT</user-client.version>
         <cvitae-client.version>0.0.1-SNAPSHOT</cvitae-client.version>
+        <enterprise-client.version>0.0.1-SNAPSHOT</enterprise-client.version>
+        <vocation-client.version>0.0.1-SNAPSHOT</vocation-client.version>
     </properties>
 
     <dependencyManagement>
@@ -53,8 +55,18 @@
             </dependency>
             <dependency>
                 <groupId>com.freework</groupId>
+                <artifactId>enterprise-client</artifactId>
+                <version>${enterprise-client.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.freework</groupId>
                 <artifactId>cvitae-client</artifactId>
                 <version>${cvitae-client.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.freework</groupId>
+                <artifactId>vocation-client</artifactId>
+                <version>${vocation-client.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

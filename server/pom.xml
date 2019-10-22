@@ -17,11 +17,19 @@
     <dependencies>
         <dependency>
             <groupId>com.freework</groupId>
+            <artifactId>vocation-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.freework</groupId>
             <artifactId>cvitae-client</artifactId>
         </dependency>
         <dependency>
             <groupId>com.freework</groupId>
             <artifactId>user-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.freework</groupId>
+            <artifactId>enterprise-client</artifactId>
         </dependency>
         <dependency>
             <groupId>com.freework</groupId>

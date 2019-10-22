@@ -11,19 +11,23 @@
         enterprise_id,
         vocation_id,
         status,
+        tb_curriculum_vitae.user_id,
         tb_enterprise_cv.curriculum_vitae_id,
+        tb_enterprise_cv.address,
         tb_enterprise_cv.create_time,
         tb_enterprise_cv.last_edit_time
         FROM
         tb_enterprise_cv,
         tb_curriculum_vitae
         <where>
-            <if test="status != null">
-                AND status=#{status}
-            </if>
             <if test="userId != null">
-                AND tb_enterprise_cv.curriculum_vitae_id = tb_curriculum_vitae.curriculum_vitae_id
                 AND tb_curriculum_vitae.user_id=#{userId}
+            </if>
+            <if test="status == 2">
+                AND (status = 0 OR status = 1)
+            </if>
+            <if test="status != null and status != 2">
+                AND status = #{status}
             </if>
             <if test="enterpriseId != null">
                 AND enterprise_id=#{enterpriseId}
@@ -32,6 +36,7 @@
                 AND vocation_id=#{vocationId}
             </if>
         </where>
+        AND tb_enterprise_cv.curriculum_vitae_id = tb_curriculum_vitae.curriculum_vitae_id
         ORDER BY tb_enterprise_cv.last_edit_time DESC
     </select>
 
@@ -43,6 +48,7 @@
         vocation_id,
         curriculum_vitae_id,
         status,
+        address,
         create_time,
         last_edit_time
         ) VALUES (
@@ -50,6 +56,7 @@
         #{vocationId},
         #{curriculumVitaeId},
         #{status},
+        #{address},
         #{createTime},
         #{lastEditTime}
         )

@@ -14,6 +14,22 @@ import javax.servlet.http.HttpServletResponse;
 @Service
 public interface CvitaeService {
     /**
+     * 查询当前用户的简历信息
+     *
+     * @param token
+     * @return
+     */
+    ResultVo queryCvitae(String token);
+
+    /**
+     * 查询当前用户的简历投递信息
+     *
+     * @param token
+     * @return
+     */
+    ResultVo queryDelivery(String token);
+
+    /**
      * 简历上传
      *
      * @param cvitaeFile
@@ -41,4 +57,24 @@ public interface CvitaeService {
      * @return
      */
     ResultVo applyByVocation(EnterpriseCv enterpriseCv, String token);
+
+    /**
+     * 查询当前企业收到的简历
+     *
+     * @param enterpriseCv
+     * @param token
+     * @return
+     */
+    ResultVo queryEnterpriseCv(EnterpriseCv enterpriseCv, String token);
+
+    /**
+     * 企业简历下载
+     *
+     * @param enterpriseCvId
+     * @param token
+     * @param response
+     * @param request
+     * @return
+     */
+    ResultVo enterpriseCvitaeDownload(Integer enterpriseCvId, String token, HttpServletResponse response, HttpServletRequest request);
 }

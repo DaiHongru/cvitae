@@ -28,6 +28,31 @@ public class EnterpriseCvVo {
     private Integer vocationId;
 
     /**
+     * 岗位名称
+     */
+    private String vocationName;
+
+    /**
+     * 用户ID
+     */
+    private Integer userId;
+
+    /**
+     * 用户性别
+     */
+    private String userName;
+
+    /**
+     * 用户性别
+     */
+    private String sex;
+
+    /**
+     * 用户学历
+     */
+    private String education;
+
+    /**
      * 投递状态，-1退回，0投递中，1通过，
      */
     private Integer status;
@@ -96,5 +121,45 @@ public class EnterpriseCvVo {
 
     public void setVocationId(Integer vocationId) {
         this.vocationId = vocationId;
+    }
+
+    public Integer getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Integer userId) {
+        this.userId = userId;
+    }
+
+    public String getSex() {
+        return sex;
+    }
+
+    public void setSex(String sex) {
+        this.sex = sex;
+    }
+
+    public String getEducation() {
+        return education;
+    }
+
+    public void setEducation(String education) {
+        this.education = education;
+    }
+
+    public String getUserName() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    public String getVocationName() {
+        return vocationName;
+    }
+
+    public void setVocationName(String vocationName) {
+        this.vocationName = vocationName;
     }
 }

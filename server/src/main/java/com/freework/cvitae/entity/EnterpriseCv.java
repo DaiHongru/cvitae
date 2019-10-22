@@ -28,6 +28,11 @@ public class EnterpriseCv {
     private Integer curriculumVitaeId;
 
     /**
+     * 存放地址
+     */
+    private String address;
+
+    /**
      * 求职者ID，数据库中无此字段
      */
     private Integer userId;
@@ -109,5 +114,13 @@ public class EnterpriseCv {
 
     public void setVocationId(Integer vocationId) {
         this.vocationId = vocationId;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 }

@@ -25,7 +25,7 @@ public class ClientController {
      * @return
      */
     @PostMapping("getUserCvitaeInfo")
-    public Map<String, Object> getUserCvitaeInfo(@RequestBody Integer userId) {
+    public Map<String, Integer> getUserCvitaeInfo(@RequestBody Integer userId) {
         return clientService.getUserCvitaeInfo(userId);
     }
 }

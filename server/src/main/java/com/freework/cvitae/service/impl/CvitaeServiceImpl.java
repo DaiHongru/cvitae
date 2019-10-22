@@ -1,7 +1,5 @@
 package com.freework.cvitae.service.impl;
 
-import com.freeowork.user.client.key.UserRedisKey;
-import com.freeowork.user.client.vo.UserVo;
 import com.freework.common.loadon.cache.JedisUtil;
 import com.freework.common.loadon.result.entity.ResultVo;
 import com.freework.common.loadon.result.enums.ResultStatusEnum;
@@ -19,6 +17,15 @@ import com.freework.cvitae.enums.EnterpriseCvStateEnum;
 import com.freework.cvitae.exceptions.CvitaeOperationException;
 import com.freework.cvitae.exceptions.EnterpriseCvOperationException;
 import com.freework.cvitae.service.CvitaeService;
+import com.freework.enterprise.client.key.EnterpriseRedisKey;
+import com.freework.enterprise.client.vo.EnterpriseVo;
+import com.freework.user.client.feign.UserClient;
+import com.freework.user.client.key.UserRedisKey;
+import com.freework.user.client.vo.UserVo;
+import com.freework.vocation.client.feign.VocationClient;
+import com.freework.vocation.client.vo.VocationVo;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +41,7 @@ import java.io.*;
 import java.net.URLEncoder;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author daihongru
@@ -49,6 +57,52 @@ public class CvitaeServiceImpl implements CvitaeService {
     private CvitaeDao cvitaeDao;
     @Autowired(required = false)
     private EnterpriseCvDao enterpriseCvDao;
+    @Autowired
+    private UserClient userClient;
+    @Autowired
+    private VocationClient vocationClient;
+
+    @Override
+    public ResultVo queryCvitae(String token) {
+        String userKey = UserRedisKey.LOGIN_KEY + token;
+        if (!jedisKeys.exists(userKey)) {
+            return ResultUtil.error(ResultStatusEnum.UNAUTHORIZED);
+        }
+        UserVo userVo = getCurrentUserVo(userKey);
+        Cvitae cvitae = new Cvitae();
+        cvitae.setUserId(userVo.getUserId());
+        List<Cvitae> cvitaeList = cvitaeDao.queryByRequirement(cvitae);
+        if (cvitaeList == null || cvitaeList.size() <= 0) {
+            return ResultUtil.error(ResultStatusEnum.NOT_FOUND);
+        }
+        List<CvitaeVo> cvitaeVoList = cvitaeList.stream().map(e -> {
+            CvitaeVo outPut = new CvitaeVo();
+            BeanUtils.copyProperties(e, outPut);
+            return outPut;
+        }).collect(Collectors.toList());
+        return ResultUtil.success(cvitaeVoList);
+    }
+
+    @Override
+    public ResultVo queryDelivery(String token) {
+        String userKey = UserRedisKey.LOGIN_KEY + token;
+        if (!jedisKeys.exists(userKey)) {
+            return ResultUtil.error(ResultStatusEnum.UNAUTHORIZED);
+        }
+        UserVo userVo = getCurrentUserVo(userKey);
+        EnterpriseCv enterpriseCv = new EnterpriseCv();
+        enterpriseCv.setUserId(userVo.getUserId());
+        List<EnterpriseCv> enterpriseCvList = enterpriseCvDao.queryByRequirement(enterpriseCv);
+        if (enterpriseCvList == null || enterpriseCvList.size() <= 0) {
+            return ResultUtil.error(ResultStatusEnum.NOT_FOUND);
+        }
+        List<EnterpriseCvVo> enterpriseCvVoList = enterpriseCvList.stream().map(e -> {
+            EnterpriseCvVo outPut = new EnterpriseCvVo();
+            BeanUtils.copyProperties(e, outPut);
+            return outPut;
+        }).collect(Collectors.toList());
+        return ResultUtil.success(enterpriseCvVoList);
+    }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -85,14 +139,10 @@ public class CvitaeServiceImpl implements CvitaeService {
         try {
             cvitaeFile.transferTo(file);
         } catch (IOException e) {
-            logger.error("上传简历时将文件存放到目标路径时异常：" + e);
+            logger.error("上传简历时将文件拷贝到目标路径时异常：" + e);
             throw new CvitaeOperationException(e.getMessage());
         }
-        List<CvitaeVo> cvitaeVoList = userVo.getCvitaeVoList();
-        CvitaeVo cvitaeVo = new CvitaeVo();
-        BeanUtils.copyProperties(cvitae, cvitaeVo);
-        cvitaeVoList.add(0, cvitaeVo);
-        userVo.setCvitaeVoList(cvitaeVoList);
+        userVo.setCvitaeCount(userVo.getCvitaeCount() + 1);
         setCurrentUserVo(userVo, userKey);
         return ResultUtil.success();
     }
@@ -100,24 +150,24 @@ public class CvitaeServiceImpl implements CvitaeService {
     @Override
     public ResultVo cvitaeDownload(Integer curriculumVitaeId, String token, HttpServletResponse response,
                                    HttpServletRequest request) {
+        if (curriculumVitaeId == null) {
+            return ResultUtil.error(ResultStatusEnum.BAD_REQUEST);
+        }
         String userKey = UserRedisKey.LOGIN_KEY + token;
         if (!jedisKeys.exists(userKey)) {
             return ResultUtil.error(ResultStatusEnum.UNAUTHORIZED);
         }
         UserVo userVo = getCurrentUserVo(userKey);
-        String path = null;
-        String fileName = null;
-        List<CvitaeVo> cvitaeVoList = userVo.getCvitaeVoList();
-        for (CvitaeVo cvitaeVo : cvitaeVoList) {
-            if (cvitaeVo.getCurriculumVitaeId().equals(curriculumVitaeId)) {
-                path = cvitaeVo.getAddress();
-                fileName = cvitaeVo.getFileName();
-                break;
-            }
+        Cvitae cvitae = new Cvitae();
+        cvitae.setCurriculumVitaeId(curriculumVitaeId);
+        cvitae.setUserId(userVo.getUserId());
+        List<Cvitae> cvitaeList = cvitaeDao.queryByRequirement(cvitae);
+        if (cvitaeList == null || cvitaeList.size() <= 0) {
+            return ResultUtil.error(ResultStatusEnum.NOT_FOUND);
         }
-        if (path == null) {
-            return ResultUtil.error(ResultStatusEnum.UNAUTHORIZED);
-        }
+        cvitae = cvitaeList.get(0);
+        String path = cvitae.getAddress();
+        String fileName = cvitae.getFileName();
         StringBuffer stringBuffer = new StringBuffer(path);
         stringBuffer.delete(0, 15);
         path = PathUtil.getBasePath() + stringBuffer.toString();
@@ -181,11 +231,18 @@ public class CvitaeServiceImpl implements CvitaeService {
         }
         Cvitae cvitae = new Cvitae();
         cvitae.setCurriculumVitaeId(enterpriseCv.getCurriculumVitaeId());
+        cvitae.setUserId(enterpriseCv.getUserId());
         List<Cvitae> cvitaeList = cvitaeDao.queryByRequirement(cvitae);
         if (cvitaeList == null || cvitaeList.size() <= 0) {
-            return ResultUtil.error(ResultStatusEnum.INTERNAL_SERVER_ERROR);
+            return ResultUtil.error(ResultStatusEnum.NOT_FOUND);
         }
+        String fileName = cvitaeList.get(0).getFileName();
+        String srcPath = PathUtil.getCvitaePath(enterpriseCv.getUserId()) + fileName;
+        String targetAddr = PathUtil.getEnterpriseCvitaePath(enterpriseCv.getEnterpriseId(), enterpriseCv.getVocationId(), enterpriseCv.getUserId());
+        FileUtil.mkdirPath(targetAddr);
+        String targetPath = targetAddr + fileName;
         enterpriseCv.setStatus(EnterpriseCvStateEnum.DELIVERY.getState());
+        enterpriseCv.setAddress("/localresources" + targetPath);
         enterpriseCv.setCreateTime(new Date());
         enterpriseCv.setLastEditTime(new Date());
         try {
@@ -198,23 +255,117 @@ public class CvitaeServiceImpl implements CvitaeService {
             logger.error("投递简历时写数据库异常:" + e.getMessage());
             throw new EnterpriseCvOperationException("投递简历时写数据库异常:" + e.getMessage());
         }
-        String fileName = cvitaeList.get(0).getFileName();
-        String srcPath = PathUtil.getCvitaePath(enterpriseCv.getUserId()) + fileName;
-        String targetAddr = PathUtil.getEnterpriseCvitaePath(enterpriseCv.getEnterpriseId(), enterpriseCv.getUserId());
-        FileUtil.mkdirPath(targetAddr);
-        String targetPath = targetAddr + fileName;
         try {
             FileUtil.copyFile(srcPath, targetPath);
         } catch (Exception e) {
             throw new EnterpriseCvOperationException("投递简历时拷贝简历文件失败：" + e);
         }
-        UserVo userVo = getCurrentUserVo(userKey);
-        List<EnterpriseCvVo> enterpriseCvVoList = userVo.getEnterpriseCvVoList();
-        EnterpriseCvVo enterpriseCvVo = new EnterpriseCvVo();
-        BeanUtils.copyProperties(enterpriseCv, enterpriseCvVo);
-        enterpriseCvVoList.add(0, enterpriseCvVo);
-        userVo.setEnterpriseCvVoList(enterpriseCvVoList);
-        setCurrentUserVo(userVo, userKey);
+        return ResultUtil.success();
+    }
+
+    @Override
+    @HystrixCommand(commandProperties = {
+            @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
+            @HystrixProperty(name = "circuitBreaker.enabled", value = "true"),
+            @HystrixProperty(name = "circuitBreaker.requestVolumeThreshold", value = "3"),
+            @HystrixProperty(name = "circuitBreaker.sleepWindowInMilliseconds", value = "5000"),
+            @HystrixProperty(name = "circuitBreaker.errorThresholdPercentage", value = "60")
+    })
+    public ResultVo queryEnterpriseCv(EnterpriseCv enterpriseCv, String token) {
+        if (enterpriseCv == null) {
+            ResultUtil.error(ResultStatusEnum.BAD_REQUEST);
+        }
+        String enterpriseKey = EnterpriseRedisKey.LOGIN_KEY + token;
+        if (!jedisKeys.exists(enterpriseKey)) {
+            return ResultUtil.error(ResultStatusEnum.UNAUTHORIZED);
+        }
+        List<EnterpriseCv> enterpriseCvList = enterpriseCvDao.queryByRequirement(enterpriseCv);
+        if (enterpriseCvList == null || enterpriseCvList.size() == 0) {
+            return ResultUtil.error(ResultStatusEnum.NOT_FOUND);
+        }
+        List<EnterpriseCvVo> enterpriseCvVoList = enterpriseCvList.stream().map(e -> {
+            EnterpriseCvVo outPut = new EnterpriseCvVo();
+            BeanUtils.copyProperties(e, outPut);
+            UserVo userVo = userClient.getUserInfo(outPut.getUserId());
+            VocationVo vocationVo = vocationClient.getVocationInfo(outPut.getVocationId());
+            outPut.setSex(userVo.getSex());
+            outPut.setUserName(userVo.getUserName());
+            outPut.setEducation(userVo.getEducation());
+            outPut.setVocationName(vocationVo.getVocationName());
+            return outPut;
+        }).collect(Collectors.toList());
+        return ResultUtil.success(enterpriseCvVoList);
+    }
+
+    @Override
+    public ResultVo enterpriseCvitaeDownload(Integer enterpriseCvId, String token, HttpServletResponse response,
+                                             HttpServletRequest request) {
+        if (enterpriseCvId == null) {
+            return ResultUtil.error(ResultStatusEnum.BAD_REQUEST);
+        }
+        String enterpriseKey = EnterpriseRedisKey.LOGIN_KEY + token;
+        if (!jedisKeys.exists(enterpriseKey)) {
+            return ResultUtil.error(ResultStatusEnum.UNAUTHORIZED);
+        }
+        EnterpriseVo enterpriseVo = getCurrentEnterpriseVo(enterpriseKey);
+        EnterpriseCv enterpriseCv = new EnterpriseCv();
+        enterpriseCv.setEnterpriseCvId(enterpriseCvId);
+        enterpriseCv.setEnterpriseId(enterpriseVo.getEnterpriseId());
+        List<EnterpriseCv> enterpriseCvList = enterpriseCvDao.queryByRequirement(enterpriseCv);
+        if (enterpriseCvList == null || enterpriseCvList.size() <= 0) {
+            return ResultUtil.error(ResultStatusEnum.NOT_FOUND);
+        }
+        enterpriseCv = enterpriseCvList.get(0);
+        String path = enterpriseCv.getAddress();
+        String fileName = path.substring(path.lastIndexOf("/") + 1);
+        StringBuffer stringBuffer = new StringBuffer(path);
+        stringBuffer.delete(0, 15);
+        path = PathUtil.getBasePath() + stringBuffer.toString();
+        File file = new File(path);
+        if (!file.exists()) {
+            return ResultUtil.error(ResultStatusEnum.NOT_FOUND);
+        }
+        String name = null;
+        String headerKey = "User-Agent";
+        String indexOfKey = "MSIE";
+        if (request.getHeader(headerKey).toUpperCase().indexOf(indexOfKey) > 0) {
+            try {
+                name = URLEncoder.encode(fileName, "UTF-8");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        } else {
+            try {
+                name = new String(fileName.getBytes(), "ISO-8859-1");
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+        response.setContentType("application/force-download; charset=utf-8");
+        response.addHeader("Content-disposition", "attachment;fileName=\"" + name + "\"");
+        byte[] buffer = new byte[1024];
+        FileInputStream fis = null;
+        BufferedInputStream bis = null;
+        OutputStream os = null;
+        try {
+            os = response.getOutputStream();
+            fis = new FileInputStream(file);
+            bis = new BufferedInputStream(fis);
+            int i = bis.read(buffer);
+            while (i != -1) {
+                os.write(buffer);
+                i = bis.read(buffer);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try {
+            bis.close();
+            fis.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return ResultUtil.success();
     }
 
@@ -231,7 +382,7 @@ public class CvitaeServiceImpl implements CvitaeService {
     }
 
     /**
-     * 设置当前登录企业的信息
+     * 设置当前登录的用户信息
      *
      * @param userVo
      * @param key
@@ -239,5 +390,28 @@ public class CvitaeServiceImpl implements CvitaeService {
     private void setCurrentUserVo(UserVo userVo, String key) {
         String userStr = JsonUtil.objectToJson(userVo);
         jedisStrings.set(key, userStr);
+    }
+
+    /**
+     * 获取当前登录企业
+     *
+     * @param key
+     * @return
+     */
+    private EnterpriseVo getCurrentEnterpriseVo(String key) {
+        String enterpriseStr = jedisStrings.get(key);
+        EnterpriseVo enterpriseVo = JsonUtil.jsonToObject(enterpriseStr, EnterpriseVo.class);
+        return enterpriseVo;
+    }
+
+    /**
+     * 设置当前登录的企业信息
+     *
+     * @param enterpriseVo
+     * @param key
+     */
+    private void setCurrentEnterpriseVo(EnterpriseVo enterpriseVo, String key) {
+        String enterpriseStr = JsonUtil.objectToJson(enterpriseVo);
+        jedisStrings.set(key, enterpriseStr);
     }
 }

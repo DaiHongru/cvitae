@@ -22,11 +22,6 @@ public class CvitaeVo {
     private String fileName;
 
     /**
-     * 存放地址路径
-     */
-    private String address;
-
-    /**
      * 创建时间
      */
     private Date createTime;
@@ -59,14 +54,6 @@ public class CvitaeVo {
 
     public void setFileName(String fileName) {
         this.fileName = fileName;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
     }
 
     public Date getCreateTime() {
