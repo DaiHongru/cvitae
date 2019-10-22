@@ -88,7 +88,7 @@ public class CvitaeController {
      * @param enterpriseCv
      * @param request
      */
-    @PostMapping(value = "current/enterprisecv")
+    @PostMapping(value = "enterprise/enterprisecv")
     public ResultVo queryEnterpriseCv(@RequestBody EnterpriseCv enterpriseCv, HttpServletRequest request) {
         String token = request.getHeader("etoken");
         return cvitaeService.queryEnterpriseCv(enterpriseCv, token);
@@ -108,4 +108,9 @@ public class CvitaeController {
         cvitaeService.enterpriseCvitaeDownload(enterpriseCvId, token, response, request);
     }
 
+    @PutMapping(value = "enterprise/enterprisecv")
+    public ResultVo updateEnterpriseCv(@RequestBody EnterpriseCv enterpriseCv, HttpServletRequest request) {
+        String token = request.getHeader("etoken");
+        return cvitaeService.updateEnterpriseCv(enterpriseCv, token);
+    }
 }

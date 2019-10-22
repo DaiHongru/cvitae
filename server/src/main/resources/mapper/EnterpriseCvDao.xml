@@ -61,4 +61,15 @@
         #{lastEditTime}
         )
     </insert>
+
+    <update id="update" parameterType="com.freework.cvitae.entity.EnterpriseCv">
+        UPDATE
+        tb_enterprise_cv
+        SET
+        status=#{status},
+        last_edit_time=#{lastEditTime}
+        WHERE
+        enterprise_cv_id=#{enterpriseCvId}
+        AND enterprise_id=#{enterpriseId}
+    </update>
 </mapper>

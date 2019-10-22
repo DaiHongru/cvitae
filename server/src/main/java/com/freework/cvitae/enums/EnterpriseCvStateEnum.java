@@ -8,9 +8,10 @@ public enum EnterpriseCvStateEnum {
     /**
      * 枚举字段
      */
+    DELETE(-2, "已删除"),
     NOT_PASS(-1, "未通过"),
     DELIVERY(0, "投递中"),
-    PASS(1, "通过");
+    PASS(1, "已通过");
 
     /**
      * 状态表示

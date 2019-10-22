@@ -24,4 +24,12 @@ public interface EnterpriseCvDao {
      */
     int insert(EnterpriseCv enterpriseCv);
 
+    /**
+     * 更新记录
+     *
+     * @param enterpriseCv
+     * @return
+     */
+    int update(EnterpriseCv enterpriseCv);
+
 }

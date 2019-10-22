@@ -77,4 +77,12 @@ public interface CvitaeService {
      * @return
      */
     ResultVo enterpriseCvitaeDownload(Integer enterpriseCvId, String token, HttpServletResponse response, HttpServletRequest request);
+
+    /**
+     * 修改企业收到简历信息的状态
+     *
+     * @param enterpriseCv
+     * @return
+     */
+    ResultVo updateEnterpriseCv(EnterpriseCv enterpriseCv, String token);
 }

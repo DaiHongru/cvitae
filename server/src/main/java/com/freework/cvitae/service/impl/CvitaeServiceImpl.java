@@ -148,8 +148,8 @@ public class CvitaeServiceImpl implements CvitaeService {
     }
 
     @Override
-    public ResultVo cvitaeDownload(Integer curriculumVitaeId, String token, HttpServletResponse response,
-                                   HttpServletRequest request) {
+    public ResultVo cvitaeDownload(Integer curriculumVitaeId, String token,
+                                   HttpServletResponse response, HttpServletRequest request) {
         if (curriculumVitaeId == null) {
             return ResultUtil.error(ResultStatusEnum.BAD_REQUEST);
         }
@@ -222,7 +222,8 @@ public class CvitaeServiceImpl implements CvitaeService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ResultVo applyByVocation(EnterpriseCv enterpriseCv, String token) {
-        if (enterpriseCv == null || enterpriseCv.getCurriculumVitaeId() == null || enterpriseCv.getEnterpriseId() == null || enterpriseCv.getVocationId() == null) {
+        if (enterpriseCv == null || enterpriseCv.getCurriculumVitaeId() == null ||
+                enterpriseCv.getEnterpriseId() == null || enterpriseCv.getVocationId() == null) {
             return ResultUtil.error(ResultStatusEnum.BAD_REQUEST);
         }
         String userKey = UserRedisKey.LOGIN_KEY + token;
@@ -238,7 +239,8 @@ public class CvitaeServiceImpl implements CvitaeService {
         }
         String fileName = cvitaeList.get(0).getFileName();
         String srcPath = PathUtil.getCvitaePath(enterpriseCv.getUserId()) + fileName;
-        String targetAddr = PathUtil.getEnterpriseCvitaePath(enterpriseCv.getEnterpriseId(), enterpriseCv.getVocationId(), enterpriseCv.getUserId());
+        String targetAddr = PathUtil.getEnterpriseCvitaePath(enterpriseCv.getEnterpriseId(),
+                enterpriseCv.getVocationId(), enterpriseCv.getUserId());
         FileUtil.mkdirPath(targetAddr);
         String targetPath = targetAddr + fileName;
         enterpriseCv.setStatus(EnterpriseCvStateEnum.DELIVERY.getState());
@@ -298,8 +300,8 @@ public class CvitaeServiceImpl implements CvitaeService {
     }
 
     @Override
-    public ResultVo enterpriseCvitaeDownload(Integer enterpriseCvId, String token, HttpServletResponse response,
-                                             HttpServletRequest request) {
+    public ResultVo enterpriseCvitaeDownload(Integer enterpriseCvId, String token,
+                                             HttpServletResponse response, HttpServletRequest request) {
         if (enterpriseCvId == null) {
             return ResultUtil.error(ResultStatusEnum.BAD_REQUEST);
         }
@@ -365,6 +367,31 @@ public class CvitaeServiceImpl implements CvitaeService {
             fis.close();
         } catch (IOException e) {
             e.printStackTrace();
+        }
+        return ResultUtil.success();
+    }
+
+    @Override
+    public ResultVo updateEnterpriseCv(EnterpriseCv enterpriseCv, String token) {
+        if (enterpriseCv == null || enterpriseCv.getStatus() == null || enterpriseCv.getEnterpriseCvId() == null) {
+            ResultUtil.error(ResultStatusEnum.BAD_REQUEST);
+        }
+        String enterpriseKey = EnterpriseRedisKey.LOGIN_KEY + token;
+        if (!jedisKeys.exists(enterpriseKey)) {
+            return ResultUtil.error(ResultStatusEnum.UNAUTHORIZED);
+        }
+        EnterpriseVo enterpriseVo = getCurrentEnterpriseVo(enterpriseKey);
+        enterpriseCv.setEnterpriseId(enterpriseVo.getEnterpriseId());
+        enterpriseCv.setLastEditTime(new Date());
+        try {
+            int judgeNum = enterpriseCvDao.update(enterpriseCv);
+            if (judgeNum <= 0) {
+                logger.error("企业修改简历投递状态失败");
+                throw new EnterpriseCvOperationException("企业修改简历投递状态失败");
+            }
+        } catch (Exception e) {
+            logger.error("企业修改简历投递状态异常:" + e.getMessage());
+            throw new EnterpriseCvOperationException("企业修改简历投递状态异常:" + e.getMessage());
         }
         return ResultUtil.success();
     }
