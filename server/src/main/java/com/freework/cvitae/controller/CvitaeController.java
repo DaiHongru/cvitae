@@ -83,6 +83,19 @@ public class CvitaeController {
     }
 
     /**
+     * 用户删除简历
+     *
+     * @param curriculumVitaeId
+     * @param request
+     * @return
+     */
+    @DeleteMapping(value = "current/cvitae/{curriculumVitaeId}")
+    public ResultVo updateEnterpriseCv(@PathVariable Integer curriculumVitaeId, HttpServletRequest request) {
+        String token = request.getHeader("utoken");
+        return cvitaeService.deleteCvitae(curriculumVitaeId, token);
+    }
+
+    /**
      * 查询当前企业收到的简历
      *
      * @param enterpriseCv
@@ -108,6 +121,13 @@ public class CvitaeController {
         cvitaeService.enterpriseCvitaeDownload(enterpriseCvId, token, response, request);
     }
 
+    /**
+     * 企业更改收到的简历状态
+     *
+     * @param enterpriseCv
+     * @param request
+     * @return
+     */
     @PutMapping(value = "enterprise/enterprisecv")
     public ResultVo updateEnterpriseCv(@RequestBody EnterpriseCv enterpriseCv, HttpServletRequest request) {
         String token = request.getHeader("etoken");

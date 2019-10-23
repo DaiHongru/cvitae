@@ -22,6 +22,11 @@ public class CvitaeVo {
     private String fileName;
 
     /**
+     * 存放地址
+     */
+    private String address;
+
+    /**
      * 创建时间
      */
     private Date createTime;
@@ -70,5 +75,13 @@ public class CvitaeVo {
 
     public void setLastEditTime(Date lastEditTime) {
         this.lastEditTime = lastEditTime;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 }

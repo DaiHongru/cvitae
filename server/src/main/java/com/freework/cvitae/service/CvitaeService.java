@@ -59,6 +59,15 @@ public interface CvitaeService {
     ResultVo applyByVocation(EnterpriseCv enterpriseCv, String token);
 
     /**
+     * 用户删除简历
+     *
+     * @param curriculumVitaeId
+     * @param token
+     * @return
+     */
+    ResultVo deleteCvitae(Integer curriculumVitaeId, String token);
+
+    /**
      * 查询当前企业收到的简历
      *
      * @param enterpriseCv
@@ -82,6 +91,7 @@ public interface CvitaeService {
      * 修改企业收到简历信息的状态
      *
      * @param enterpriseCv
+     * @param token
      * @return
      */
     ResultVo updateEnterpriseCv(EnterpriseCv enterpriseCv, String token);

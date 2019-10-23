@@ -266,6 +266,42 @@ public class CvitaeServiceImpl implements CvitaeService {
     }
 
     @Override
+    public ResultVo deleteCvitae(Integer curriculumVitaeId, String token) {
+        if (curriculumVitaeId == null) {
+            return ResultUtil.error(ResultStatusEnum.BAD_REQUEST);
+        }
+        String userKey = UserRedisKey.LOGIN_KEY + token;
+        if (!jedisKeys.exists(userKey)) {
+            return ResultUtil.error(ResultStatusEnum.UNAUTHORIZED);
+        }
+        UserVo userVo = getCurrentUserVo(userKey);
+        Cvitae cvitae = new Cvitae();
+        cvitae.setUserId(userVo.getUserId());
+        cvitae.setCurriculumVitaeId(curriculumVitaeId);
+        List<Cvitae> cvitaeList = cvitaeDao.queryByRequirement(cvitae);
+        if (cvitaeList == null || cvitaeList.size() <= 0) {
+            return ResultUtil.error(ResultStatusEnum.NOT_FOUND);
+        }
+        try {
+            int judgeNum = cvitaeDao.delete(cvitae);
+            if (judgeNum <= 0) {
+                logger.error("用户删除简历失败");
+                throw new EnterpriseCvOperationException("用户删除简历失败");
+            }
+        } catch (Exception e) {
+            logger.error("用户删除简历异常:" + e.getMessage());
+            throw new EnterpriseCvOperationException("用户删除简历异常:" + e.getMessage());
+        }
+        String path = cvitaeList.get(0).getAddress();
+        StringBuffer stringBuffer = new StringBuffer(path);
+        stringBuffer.delete(0, 15);
+        FileUtil.deleteFileOrPath(stringBuffer.toString());
+        userVo.setCvitaeCount(userVo.getCvitaeCount() - 1);
+        setCurrentUserVo(userVo, userKey);
+        return ResultUtil.success();
+    }
+
+    @Override
     @HystrixCommand(commandProperties = {
             @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "1000"),
             @HystrixProperty(name = "circuitBreaker.enabled", value = "true"),

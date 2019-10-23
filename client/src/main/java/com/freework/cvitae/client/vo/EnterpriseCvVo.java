@@ -18,6 +18,11 @@ public class EnterpriseCvVo {
     private Integer enterpriseId;
 
     /**
+     * 存放地址
+     */
+    private String address;
+
+    /**
      * 投递的简历ID
      */
     private Integer curriculumVitaeId;
@@ -161,5 +166,13 @@ public class EnterpriseCvVo {
 
     public void setVocationName(String vocationName) {
         this.vocationName = vocationName;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 }

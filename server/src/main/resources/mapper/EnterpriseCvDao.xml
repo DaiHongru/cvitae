@@ -11,17 +11,16 @@
         enterprise_id,
         vocation_id,
         status,
-        tb_curriculum_vitae.user_id,
-        tb_enterprise_cv.curriculum_vitae_id,
-        tb_enterprise_cv.address,
-        tb_enterprise_cv.create_time,
-        tb_enterprise_cv.last_edit_time
+        user_id,
+        curriculum_vitae_id,
+        address,
+        create_time,
+        last_edit_time
         FROM
-        tb_enterprise_cv,
-        tb_curriculum_vitae
+        tb_enterprise_cv
         <where>
             <if test="userId != null">
-                AND tb_curriculum_vitae.user_id=#{userId}
+                AND user_id=#{userId}
             </if>
             <if test="status == 2">
                 AND (status = 0 OR status = 1)
@@ -36,8 +35,7 @@
                 AND vocation_id=#{vocationId}
             </if>
         </where>
-        AND tb_enterprise_cv.curriculum_vitae_id = tb_curriculum_vitae.curriculum_vitae_id
-        ORDER BY tb_enterprise_cv.last_edit_time DESC
+        ORDER BY last_edit_time DESC
     </select>
 
     <insert id="insert" useGeneratedKeys="true"

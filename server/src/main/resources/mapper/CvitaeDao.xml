@@ -35,4 +35,12 @@
         ORDER BY last_edit_time DESC
     </select>
 
+    <delete id="delete" parameterType="com.freework.cvitae.entity.Cvitae">
+        DELETE
+        FROM
+        tb_curriculum_vitae
+        WHERE
+        curriculum_vitae_id=#{curriculumVitaeId}
+        AND user_id= #{userId}
+    </delete>
 </mapper>

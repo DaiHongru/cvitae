@@ -23,4 +23,12 @@ public interface CvitaeDao {
      * @return
      */
     List<Cvitae> queryByRequirement(Cvitae cvitae);
+
+    /**
+     * 删除记录
+     *
+     * @param cvitae
+     * @return
+     */
+    int delete(Cvitae cvitae);
 }
