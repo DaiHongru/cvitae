@@ -64,7 +64,7 @@ public class CvitaeController {
      * @param token
      * @param curriculumVitaeId
      */
-    @GetMapping(value = "current/download/{curriculumVitaeId}/{token}")
+    @GetMapping(value = "download/current/{curriculumVitaeId}/{token}")
     public void cvitaeDownload(HttpServletResponse response, HttpServletRequest request,
                                @PathVariable String token, @PathVariable Integer curriculumVitaeId) {
         cvitaeService.cvitaeDownload(curriculumVitaeId, token, response, request);
@@ -115,7 +115,7 @@ public class CvitaeController {
      * @param token
      * @param enterpriseCvId
      */
-    @GetMapping(value = "enterprise/download/{enterpriseCvId}/{token}")
+    @GetMapping(value = "download/enterprise/{enterpriseCvId}/{token}")
     public void enterpriseCvitaeDownload(HttpServletResponse response, HttpServletRequest request,
                                          @PathVariable String token, @PathVariable Integer enterpriseCvId) {
         cvitaeService.enterpriseCvitaeDownload(enterpriseCvId, token, response, request);

@@ -35,7 +35,7 @@
                 AND vocation_id=#{vocationId}
             </if>
         </where>
-        ORDER BY last_edit_time DESC
+        ORDER BY create_time DESC
     </select>
 
     <insert id="insert" useGeneratedKeys="true"
