@@ -1,6 +1,8 @@
 package com.freework.cvitae.service.impl;
 
 import com.freework.common.loadon.cache.JedisUtil;
+import com.freework.common.loadon.entity.News;
+import com.freework.common.loadon.enums.NewsStateEnum;
 import com.freework.common.loadon.result.entity.ResultVo;
 import com.freework.common.loadon.result.enums.ResultStatusEnum;
 import com.freework.common.loadon.result.util.ResultUtil;
@@ -11,12 +13,14 @@ import com.freework.cvitae.client.vo.CvitaeVo;
 import com.freework.cvitae.client.vo.EnterpriseCvVo;
 import com.freework.cvitae.dao.CvitaeDao;
 import com.freework.cvitae.dao.EnterpriseCvDao;
+import com.freework.cvitae.dao.NewsDao;
 import com.freework.cvitae.entity.Cvitae;
 import com.freework.cvitae.entity.EnterpriseCv;
 import com.freework.cvitae.enums.EnterpriseCvStateEnum;
 import com.freework.cvitae.exceptions.CvitaeOperationException;
 import com.freework.cvitae.exceptions.EnterpriseCvOperationException;
 import com.freework.cvitae.service.CvitaeService;
+import com.freework.enterprise.client.feign.EnterpriseClient;
 import com.freework.enterprise.client.key.EnterpriseRedisKey;
 import com.freework.enterprise.client.vo.EnterpriseVo;
 import com.freework.user.client.feign.UserClient;
@@ -31,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -57,10 +62,14 @@ public class CvitaeServiceImpl implements CvitaeService {
     private CvitaeDao cvitaeDao;
     @Autowired(required = false)
     private EnterpriseCvDao enterpriseCvDao;
+    @Autowired(required = false)
+    private NewsDao newsDao;
     @Autowired
     private UserClient userClient;
     @Autowired
     private VocationClient vocationClient;
+    @Autowired
+    private EnterpriseClient enterpriseClient;
 
     @Override
     public ResultVo queryCvitae(String token) {
@@ -262,6 +271,7 @@ public class CvitaeServiceImpl implements CvitaeService {
         } catch (Exception e) {
             throw new EnterpriseCvOperationException("投递简历时拷贝简历文件失败：" + e);
         }
+        insertApplyNews(userKey, enterpriseCv.getEnterpriseId(), enterpriseCv.getVocationId());
         return ResultUtil.success();
     }
 
@@ -429,6 +439,7 @@ public class CvitaeServiceImpl implements CvitaeService {
             logger.error("企业修改简历投递状态异常:" + e.getMessage());
             throw new EnterpriseCvOperationException("企业修改简历投递状态异常:" + e.getMessage());
         }
+        insertUpdateNews(enterpriseVo, enterpriseCv);
         return ResultUtil.success();
     }
 
@@ -476,5 +487,59 @@ public class CvitaeServiceImpl implements CvitaeService {
     private void setCurrentEnterpriseVo(EnterpriseVo enterpriseVo, String key) {
         String enterpriseStr = JsonUtil.objectToJson(enterpriseVo);
         jedisStrings.set(key, enterpriseStr);
+    }
+
+    /**
+     * 新建投递消息
+     */
+    @Async
+    @HystrixCommand
+    public void insertApplyNews(String userKey, Integer enterpriseId, Integer vocationId) {
+        EnterpriseVo enterpriseVo = enterpriseClient.getEnterpriseById(enterpriseId);
+        VocationVo vocationVo = vocationClient.getVocationInfo(vocationId);
+        UserVo userVo = getCurrentUserVo(userKey);
+        String content = "：投递简历至 ["
+                + vocationVo.getVocationName() + "]，["
+                + enterpriseVo.getEnterpriseName() + "]";
+        insertNews(NewsStateEnum.NEWS_TYPE_USER, userVo.getUserId(), content);
+    }
+
+    /**
+     * 新建投递状态修改消息
+     */
+    @Async
+    @HystrixCommand
+    public void insertUpdateNews(EnterpriseVo enterpriseVo, EnterpriseCv enterpriseCv) {
+        VocationVo vocationVo = vocationClient.getVocationInfo(enterpriseCv.getVocationId());
+        String content = "恭喜您！您投递的 ["
+                + vocationVo.getVocationName() + "]，["
+                + enterpriseVo.getEnterpriseName() + "] 通过了，请耐心等待企业通知。（企业联系方式：" + enterpriseVo.getPhone() + "）";
+        insertNews(NewsStateEnum.NEWS_TYPE_USER, enterpriseCv.getUserId(), content);
+    }
+
+    /**
+     * 添加新的News
+     *
+     * @param type
+     * @param ownerId
+     * @param content
+     */
+    public void insertNews(String type, Integer ownerId, String content) {
+        News news = new News();
+        news.setOwnerType(type);
+        news.setOwnerId(ownerId);
+        news.setStatus(NewsStateEnum.UNREAD.getState());
+        news.setContent(content);
+        news.setCreateTime(new Date());
+        news.setLastEditTime(new Date());
+        try {
+            int judgeNum = newsDao.insert(news);
+            if (judgeNum <= 0) {
+                logger.error("创建新的News失败！news：" + news.toString());
+            }
+        } catch (Exception e) {
+            logger.error("创建新的News异常");
+            e.printStackTrace();
+        }
     }
 }

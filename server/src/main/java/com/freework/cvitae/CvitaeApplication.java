@@ -5,6 +5,7 @@ import org.springframework.cloud.client.SpringCloudApplication;
 import org.springframework.cloud.netflix.hystrix.dashboard.EnableHystrixDashboard;
 import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 /**
  * @author daihongru
@@ -13,6 +14,7 @@ import org.springframework.context.annotation.ComponentScan;
 @ComponentScan(basePackages = "com.freework")
 @SpringCloudApplication
 @EnableHystrixDashboard
+@EnableAsync
 public class CvitaeApplication {
 
     public static void main(String[] args) {
