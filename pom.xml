@@ -32,6 +32,7 @@
         <cvitae-client.version>0.0.1-SNAPSHOT</cvitae-client.version>
         <enterprise-client.version>0.0.1-SNAPSHOT</enterprise-client.version>
         <vocation-client.version>0.0.1-SNAPSHOT</vocation-client.version>
+        <notify-client.version>0.0.1-SNAPSHOT</notify-client.version>
     </properties>
 
     <dependencyManagement>
@@ -67,6 +68,11 @@
                 <groupId>com.freework</groupId>
                 <artifactId>vocation-client</artifactId>
                 <version>${vocation-client.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.freework</groupId>
+                <artifactId>notify-client</artifactId>
+                <version>${notify-client.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

@@ -17,6 +17,10 @@
     <dependencies>
         <dependency>
             <groupId>com.freework</groupId>
+            <artifactId>notify-client</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.freework</groupId>
             <artifactId>vocation-client</artifactId>
         </dependency>
         <dependency>
@@ -69,6 +73,14 @@
             <groupId>commons-fileupload</groupId>
             <artifactId>commons-fileupload</artifactId>
             <version>1.3.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-quartz</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.cloud</groupId>

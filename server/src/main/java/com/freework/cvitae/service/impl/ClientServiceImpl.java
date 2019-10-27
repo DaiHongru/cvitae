@@ -25,6 +25,7 @@ public class ClientServiceImpl implements ClientService {
     @Autowired(required = false)
     private EnterpriseCvDao enterpriseCvDao;
 
+
     @Override
     public Map<String, Integer> getUserCvitaeInfo(Integer userId) {
         Map<String, Integer> map = new HashMap<>(16);

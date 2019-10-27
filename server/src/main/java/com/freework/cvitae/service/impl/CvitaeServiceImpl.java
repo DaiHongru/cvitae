@@ -6,6 +6,7 @@ import com.freework.common.loadon.enums.NewsStateEnum;
 import com.freework.common.loadon.result.entity.ResultVo;
 import com.freework.common.loadon.result.enums.ResultStatusEnum;
 import com.freework.common.loadon.result.util.ResultUtil;
+import com.freework.common.loadon.util.DateUtil;
 import com.freework.common.loadon.util.FileUtil;
 import com.freework.common.loadon.util.JsonUtil;
 import com.freework.common.loadon.util.PathUtil;
@@ -16,13 +17,18 @@ import com.freework.cvitae.dao.EnterpriseCvDao;
 import com.freework.cvitae.dao.NewsDao;
 import com.freework.cvitae.entity.Cvitae;
 import com.freework.cvitae.entity.EnterpriseCv;
+import com.freework.cvitae.entity.MessageLog;
 import com.freework.cvitae.enums.EnterpriseCvStateEnum;
+import com.freework.cvitae.enums.MessageLogStateEnum;
 import com.freework.cvitae.exceptions.CvitaeOperationException;
 import com.freework.cvitae.exceptions.EnterpriseCvOperationException;
+import com.freework.cvitae.producer.EmailSender;
 import com.freework.cvitae.service.CvitaeService;
+import com.freework.cvitae.service.MessageLogService;
 import com.freework.enterprise.client.feign.EnterpriseClient;
 import com.freework.enterprise.client.key.EnterpriseRedisKey;
 import com.freework.enterprise.client.vo.EnterpriseVo;
+import com.freework.notify.client.vo.EmailVo;
 import com.freework.user.client.feign.UserClient;
 import com.freework.user.client.key.UserRedisKey;
 import com.freework.user.client.vo.UserVo;
@@ -64,6 +70,8 @@ public class CvitaeServiceImpl implements CvitaeService {
     private EnterpriseCvDao enterpriseCvDao;
     @Autowired(required = false)
     private NewsDao newsDao;
+    @Autowired
+    private EmailSender emailSender;
     @Autowired
     private UserClient userClient;
     @Autowired
@@ -272,6 +280,7 @@ public class CvitaeServiceImpl implements CvitaeService {
             throw new EnterpriseCvOperationException("投递简历时拷贝简历文件失败：" + e);
         }
         insertApplyNews(userKey, enterpriseCv.getEnterpriseId(), enterpriseCv.getVocationId());
+        sendApplyNotifyEmail(enterpriseCv);
         return ResultUtil.success();
     }
 
@@ -498,7 +507,7 @@ public class CvitaeServiceImpl implements CvitaeService {
         EnterpriseVo enterpriseVo = enterpriseClient.getEnterpriseById(enterpriseId);
         VocationVo vocationVo = vocationClient.getVocationInfo(vocationId);
         UserVo userVo = getCurrentUserVo(userKey);
-        String content = "：投递简历至 ["
+        String content = "投递简历至 ["
                 + vocationVo.getVocationName() + "]，["
                 + enterpriseVo.getEnterpriseName() + "]";
         insertNews(NewsStateEnum.NEWS_TYPE_USER, userVo.getUserId(), content);
@@ -524,6 +533,7 @@ public class CvitaeServiceImpl implements CvitaeService {
      * @param ownerId
      * @param content
      */
+    @Async
     public void insertNews(String type, Integer ownerId, String content) {
         News news = new News();
         news.setOwnerType(type);
@@ -541,5 +551,47 @@ public class CvitaeServiceImpl implements CvitaeService {
             logger.error("创建新的News异常");
             e.printStackTrace();
         }
+    }
+
+    @Async
+    @HystrixCommand
+    public void sendApplyNotifyEmail(EnterpriseCv enterpriseCv) {
+        EnterpriseVo enterpriseVo = enterpriseClient.getEnterpriseById(enterpriseCv.getEnterpriseId());
+        VocationVo vocationVo = vocationClient.getVocationInfo(enterpriseCv.getVocationId());
+        EmailVo emailVo = new EmailVo();
+        String htmlText = "<html lang=\"zh-CN\">\n" +
+                "<meta charset=\"UTF-8\">\n" +
+                "<img src=\"http://101.132.152.64/img/logo.png\">\n" +
+                "<h1 style=\"color: #2e6da4\">FreeWork<br />\n" +
+                "    <hr style=\"width: 50%;margin-left: 0px;\">\n" +
+                "    您发布的招聘岗位有了新的投递信息\n" +
+                "</h1>\n" +
+                "<p>尊敬的用户，您好！</p>\n" +
+                "<p>您发布的岗位：<span style=\"color: #137bd6;\">" + vocationVo.getVocationName() + "</span> ，有了新的应聘信息。</p>\n" +
+                "<p>前往企业中心即可查看详情</p>\n" +
+                "<button style=\"width: 100px;height: 30px;\"\n" +
+                "    onclick=\"window.open('http://101.132.152.64/html/enterprise/enterpriselogin.html', '_blank').location;\">企业中心</button>\n" +
+                "<p>投递的简历已随本邮件发送，请查看附件。</p>\n" +
+                "<p>感谢您的使用，谢谢！</p>\n" +
+                "<p>FreeWork团队</p>\n" +
+                "</html>";
+        emailVo.setAddress(enterpriseVo.getEmail());
+        emailVo.setHtmlText(htmlText);
+        String urlHeader = "http://101.132.152.64";
+        emailVo.setEnclosureUrl(urlHeader + enterpriseCv.getAddress());
+        emailVo.autoSetMessageId();
+        MessageLog messageLog = new MessageLog();
+        messageLog.setTag("CvitaeEmail");
+        messageLog.setMessageId(emailVo.getMessageId());
+        messageLog.setMessage(JsonUtil.objectToJson(emailVo));
+        messageLog.setTryCount(1);
+        messageLog.setStatus(MessageLogStateEnum.SENDING.getState());
+        messageLog.setNextRetryTime(DateUtil.getLaterTimeMinute(1));
+        messageLog.setCreateTime(new Date());
+        messageLog.setLastEditTime(new Date());
+        String jsonString = JsonUtil.objectToJson(messageLog);
+        String messageLogKey = MessageLogService.MESSAGELOG_EMAIL_KEY + "_" + messageLog.getMessageId();
+        jedisStrings.set(messageLogKey, jsonString);
+        emailSender.send(emailVo);
     }
 }
