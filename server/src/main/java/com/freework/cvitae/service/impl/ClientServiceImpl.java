@@ -44,7 +44,8 @@ public class ClientServiceImpl implements ClientService {
         if (enterpriseCvList != null && enterpriseCvList.size() > 0) {
             enterpriseCvCount = enterpriseCvList.size();
             for (EnterpriseCv ec : enterpriseCvList) {
-                if (ec.getStatus().equals(EnterpriseCvStateEnum.PASS.getState())) {
+                if (ec.getStatus().equals(EnterpriseCvStateEnum.PASS.getState())
+                        || ec.getStatus().equals(EnterpriseCvStateEnum.DELETE.getState())) {
                     passCvitaeCount++;
                 }
             }

@@ -107,10 +107,12 @@ public class CvitaeServiceImpl implements CvitaeService {
         if (!jedisKeys.exists(userKey)) {
             return ResultUtil.error(ResultStatusEnum.UNAUTHORIZED);
         }
+        if (pageNum != 0 || pageSize != 0) {
+            PageHelper.startPage(pageNum, pageSize);
+        }
         UserVo userVo = getCurrentUserVo(userKey);
         EnterpriseCv enterpriseCv = new EnterpriseCv();
         enterpriseCv.setUserId(userVo.getUserId());
-        PageHelper.startPage(pageNum, pageSize);
         List<EnterpriseCv> enterpriseCvList = enterpriseCvDao.queryByRequirement(enterpriseCv);
         if (enterpriseCvList == null || enterpriseCvList.size() <= 0) {
             return ResultUtil.error(ResultStatusEnum.NOT_FOUND);
@@ -453,7 +455,9 @@ public class CvitaeServiceImpl implements CvitaeService {
             logger.error("企业修改简历投递状态异常:" + e.getMessage());
             throw new EnterpriseCvOperationException("企业修改简历投递状态异常:" + e.getMessage());
         }
-        insertUpdateNews(enterpriseVo, enterpriseCv);
+        if (!enterpriseCv.getStatus().equals(EnterpriseCvStateEnum.DELETE.getState())) {
+            insertUpdateNews(enterpriseVo, enterpriseCv);
+        }
         return ResultUtil.success();
     }
 
@@ -528,6 +532,11 @@ public class CvitaeServiceImpl implements CvitaeService {
         String content = "恭喜您！您投递的 ["
                 + vocationVo.getVocationName() + "]，["
                 + enterpriseVo.getEnterpriseName() + "] 通过了，请耐心等待企业通知。（企业联系方式：" + enterpriseVo.getPhone() + "）";
+        if (!enterpriseCv.getStatus().equals(EnterpriseCvStateEnum.PASS.getState())) {
+            content = "很遗憾！您投递的 ["
+                    + vocationVo.getVocationName() + "]，["
+                    + enterpriseVo.getEnterpriseName() + "] 没有通过，再试试其他岗位吧。";
+        }
         insertNews(NewsStateEnum.NEWS_TYPE_USER, enterpriseCv.getUserId(), content);
     }
 
