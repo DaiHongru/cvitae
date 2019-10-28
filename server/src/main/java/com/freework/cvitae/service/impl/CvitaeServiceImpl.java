@@ -281,6 +281,9 @@ public class CvitaeServiceImpl implements CvitaeService {
         } catch (Exception e) {
             throw new EnterpriseCvOperationException("投递简历时拷贝简历文件失败：" + e);
         }
+        UserVo userVo = getCurrentUserVo(userKey);
+        userVo.setDeliveryCvitaeCount(userVo.getDeliveryCvitaeCount() + 1);
+        setCurrentUserVo(userVo, userKey);
         insertApplyNews(userKey, enterpriseCv.getEnterpriseId(), enterpriseCv.getVocationId());
         sendApplyNotifyEmail(enterpriseCv);
         return ResultUtil.success();
