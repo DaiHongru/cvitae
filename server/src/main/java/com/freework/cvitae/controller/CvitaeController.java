@@ -37,10 +37,12 @@ public class CvitaeController {
      * @param request
      * @return
      */
-    @GetMapping(value = "current/delivery")
-    public ResultVo queryDelivery(HttpServletRequest request) {
+    @GetMapping(value = "current/delivery/{pageNum}/{pageSize}")
+    public ResultVo queryDelivery(HttpServletRequest request,
+                                  @PathVariable Integer pageNum,
+                                  @PathVariable Integer pageSize) {
         String token = request.getHeader("utoken");
-        return cvitaeService.queryDelivery(token);
+        return cvitaeService.queryDelivery(token, pageNum, pageSize);
     }
 
     /**

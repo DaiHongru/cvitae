@@ -25,9 +25,11 @@ public interface CvitaeService {
      * 查询当前用户的简历投递信息
      *
      * @param token
+     * @param pageNum
+     * @param pageSize
      * @return
      */
-    ResultVo queryDelivery(String token);
+    ResultVo queryDelivery(String token, Integer pageNum, Integer pageSize);
 
     /**
      * 简历上传

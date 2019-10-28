@@ -34,6 +34,7 @@ import com.freework.user.client.key.UserRedisKey;
 import com.freework.user.client.vo.UserVo;
 import com.freework.vocation.client.feign.VocationClient;
 import com.freework.vocation.client.vo.VocationVo;
+import com.github.pagehelper.PageHelper;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 import org.apache.commons.lang.StringUtils;
@@ -101,7 +102,7 @@ public class CvitaeServiceImpl implements CvitaeService {
     }
 
     @Override
-    public ResultVo queryDelivery(String token) {
+    public ResultVo queryDelivery(String token, Integer pageNum, Integer pageSize) {
         String userKey = UserRedisKey.LOGIN_KEY + token;
         if (!jedisKeys.exists(userKey)) {
             return ResultUtil.error(ResultStatusEnum.UNAUTHORIZED);
@@ -109,6 +110,7 @@ public class CvitaeServiceImpl implements CvitaeService {
         UserVo userVo = getCurrentUserVo(userKey);
         EnterpriseCv enterpriseCv = new EnterpriseCv();
         enterpriseCv.setUserId(userVo.getUserId());
+        PageHelper.startPage(pageNum, pageSize);
         List<EnterpriseCv> enterpriseCvList = enterpriseCvDao.queryByRequirement(enterpriseCv);
         if (enterpriseCvList == null || enterpriseCvList.size() <= 0) {
             return ResultUtil.error(ResultStatusEnum.NOT_FOUND);
