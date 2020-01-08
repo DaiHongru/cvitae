@@ -583,8 +583,6 @@ public class CvitaeServiceImpl implements CvitaeService {
                 "<p>尊敬的用户，您好！</p>\n" +
                 "<p>您发布的岗位：<span style=\"color: #137bd6;\">" + vocationVo.getVocationName() + "</span> ，有了新的应聘信息。</p>\n" +
                 "<p>前往企业中心即可查看详情</p>\n" +
-                "<button style=\"width: 100px;height: 30px;\"\n" +
-                "    onclick=\"window.open('http://101.132.152.64/html/enterprise/enterpriselogin.html', '_blank').location;\">企业中心</button>\n" +
                 "<p>投递的简历已随本邮件发送，请查看附件。</p>\n" +
                 "<p>感谢您的使用，谢谢！</p>\n" +
                 "<p>FreeWork团队</p>\n" +
